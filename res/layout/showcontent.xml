@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+android:id="@+id/widget32"
+android:layout_width="fill_parent"
+android:layout_height="fill_parent"
+xmlns:android="http://schemas.android.com/apk/res/android"
+>
+<LinearLayout 
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent">
+  
+  	<TextView android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:textSize = "26sp"
+		android:text="心得內容:P" />
+ 
+	<TextView android:id="@+id/ntitle"
+		android:textSize = "16sp"
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content" 
+		android:text="" />
+
+	<Gallery 
+    android:id="@+id/gallery" 
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+	</Gallery>
+	
+	<TextView android:id="@+id/ncontent"
+		android:textSize = "16sp"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent" 
+		android:text="" />
+		
+	<Button android:id="@+id/new_exit" 
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" 
+		android:text="@string/msg_exit" />
+</LinearLayout>
+</ScrollView>   
