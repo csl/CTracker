@@ -6,7 +6,7 @@
     <application 
        android:icon="@drawable/icon" 
        android:label="@string/app_name">
-        <activity android:name=".menu"
+        <activity android:name=".MyGoogleMap"
                   android:label="@string/app_name">
             <intent-filter>
                 <action 
@@ -17,7 +17,6 @@
         </activity>
         
       	<uses-library android:name="com.google.android.maps"/> 
-        <activity android:name="MyGoogleMap"></activity>
         <activity android:name="map"></activity>
         
     </application>

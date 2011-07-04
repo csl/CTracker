@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="hello">Hello ChildTracker</string> 
-  <string name="app_name">ChildTracker</string>
+  <string name="hello">Hello Tracker</string> 
+  <string name="app_name">MTracker</string>
   
   <string name="menu_start">開始使用</string>
 	<string name="menu_exit">帶我離開</string> 

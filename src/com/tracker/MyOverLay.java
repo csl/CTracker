@@ -113,7 +113,7 @@ public class MyOverLay  extends Overlay {
     @Override
 	public void draw(Canvas canvas, MapView	mapView, boolean shadow) 
   {
-      drawNowGeoMap(canvas, mapView, shadow);
+      //drawNowGeoMap(canvas, mapView, shadow);
    		drawMapLocations(canvas, mapView, shadow);
    		drawPointRange(canvas, mapView, shadow);
    		//drawInfoWindow(canvas, mapView, shadow);

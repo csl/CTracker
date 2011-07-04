@@ -24,6 +24,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context; 
 import android.content.DialogInterface;
 import android.content.Intent; 
@@ -34,10 +36,15 @@ import android.location.Geocoder;
 import android.location.Location; 
 import android.location.LocationListener; 
 import android.location.LocationManager; 
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle; 
+import android.provider.Settings;
 //import android.util.Log;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View; 
 import android.widget.Button; 
 import android.widget.EditText; 
@@ -60,7 +67,7 @@ public class MyGoogleMap extends MapActivity
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
   private String strLocationProvider = ""; 
-  
+
   private LocationManager mLocationManager01; 
   private Location mLocation01; 
   private MapController mMapController01; 
@@ -83,7 +90,6 @@ public class MyGoogleMap extends MapActivity
   private SendDataSocket sData;
 
   private int serve_port = 12122;
-  private int port = 12122;
   
   private GeoPoint top_left;        
   private GeoPoint top_right;
@@ -92,12 +98,28 @@ public class MyGoogleMap extends MapActivity
   
   private boolean Setting_Ready;
 
+  private static final int MENU_EXIT = Menu.FIRST;
+  
   @Override 
   protected void onCreate(Bundle icicle) 
   { 
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
+    
+    //Checking Status
+    if (CheckInternet(3))
+    {
+        String provider = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+        if(provider == null)
+        {
+         openOptionsDialog("NO GPS");
+        }
+    }
+    else
+    {
+      openOptionsDialog("NO Internet");
+    } 
     
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
@@ -120,14 +142,14 @@ public class MyGoogleMap extends MapActivity
     
     if (nowGeoPoint == null)
     {
-      openOptionsDialog("no GPS rec");    
+      openDialog("no GPS rec");    
     }
     
     refreshMapViewByGeoPoint(nowGeoPoint, 
                        mMapView, intZoomLevel); 
      
-    mLocationManager01.requestLocationUpdates 
-    (strLocationProvider, 2000, 10, mLocationListener01); 
+    //mLocationManager01.requestLocationUpdates 
+    //(strLocationProvider, 2000, 10, mLocationListener01); 
      
     getMapLocations(true);
 
@@ -167,6 +189,32 @@ public class MyGoogleMap extends MapActivity
     }
   }
   
+  public boolean onCreateOptionsMenu(Menu menu)
+  {
+    super.onCreateOptionsMenu(menu);
+    
+    menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
+    .setAlphabeticShortcut('E');
+  return true;  
+  }
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item)
+  {
+    Intent intent = new Intent() ;
+    
+    switch (item.getItemId())
+      { 
+          case MENU_EXIT:
+            openExitDialog();
+    
+             break ;
+      }
+    
+      return true ;
+  }
+  
+  
   public List<MapLocation> getMapLocations(boolean doit) 
   {
     if (mapLocations == null || doit == true) 
@@ -192,14 +240,21 @@ public class MyGoogleMap extends MapActivity
       if (Setting_Ready)
       {
         //sendCurrentGPSData
-        double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
         double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
+        double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
         
-        SendGPSData(Latitude + "," + Longitude);
+        if (CheckProximityAlert(Latitude, Longitude) == 0)
+        {
+          //over range
+          SendGPSData(Latitude + "," + Longitude + "," + "1");
+          openDialog("over range");
+        }
+        else
+          SendGPSData(Latitude + "," + Longitude);
+        
       }
-      
-    } 
-
+    }
+    
     public void onProviderDisabled(String provider) 
     { 
       // TODO Auto-generated method stub 
@@ -339,7 +394,7 @@ public class MyGoogleMap extends MapActivity
 
   public void SendGPSData(String GPSData)
   {
-    int port = 12122;
+    int port = 12121;
 
     sData = new SendDataSocket(this);
     sData.SetAddressPort(CIPAddress , port);
@@ -443,8 +498,31 @@ public class MyGoogleMap extends MapActivity
     
     overlay.SetPoint(top_left, top_right, bottom_left, bottom_right);
     Setting_Ready = true;
-    
+    label.setText("Location IP: " + IPAddress + ", Starting...");
+
     return 1;
+  }
+  
+  public int CheckProximityAlert(double nowlat, double nowlon)
+  {
+    double Tlplat = top_left.getLatitudeE6()/ 1E6;
+    double Tlplon = top_left.getLongitudeE6()/ 1E6;
+    double Trplat = top_right.getLatitudeE6()/ 1E6;
+    double Trplon = top_right.getLongitudeE6()/ 1E6;
+    double Blplat = bottom_left.getLatitudeE6()/ 1E6;
+    double Blplon = bottom_left.getLongitudeE6()/ 1E6;    
+    double Brplat = bottom_right.getLatitudeE6()/ 1E6;
+    double Brplon = bottom_right.getLongitudeE6()/ 1E6;
+    
+    if (nowlat >= Tlplat && nowlat <= Trplat)
+    {
+      if (nowlon >= Trplon && nowlon <= Brplon)
+      {
+          return 1;
+      }
+    }  
+    
+    return 0;
   }
   
   public String getLocalIpAddress() {
@@ -466,7 +544,48 @@ public class MyGoogleMap extends MapActivity
     }
 
     return null;
-}  
+  }
+  
+  private boolean CheckInternet(int retry)
+  {
+    boolean has = false;
+    for (int i=0; i<=retry; i++)
+    {
+      has = HaveInternet();
+      if (has == true) break;       
+    }
+    
+  return has;
+  }  
+  
+  private boolean HaveInternet()
+  {
+     boolean result = false;
+     
+     ConnectivityManager connManager = (ConnectivityManager) 
+                                getSystemService(Context.CONNECTIVITY_SERVICE); 
+      
+     NetworkInfo info = connManager.getActiveNetworkInfo();
+     
+     if (info == null || !info.isConnected())
+     {
+       result = false;
+     }
+     else 
+     {
+       if (!info.isAvailable())
+       {
+         result =false;
+       }
+       else
+       {
+         result = true;
+       }
+   }
+  
+   return result;
+  }
+  
   
   //show message
   public void openOptionsDialog(String info)
@@ -480,6 +599,50 @@ public class MyGoogleMap extends MapActivity
          public void onClick(DialogInterface dialoginterface, int i)
          {
            finish();
+         }
+         }
+        )
+    .show();
+  }
+  
+  private void openExitDialog() {
+    
+    new AlertDialog.Builder(this)
+      .setTitle(R.string.msg_exit)
+      .setMessage(R.string.str_exit_msg)
+      .setNegativeButton(R.string.str_exit_no,
+          new DialogInterface.OnClickListener() {
+          
+            public void onClick(DialogInterface dialoginterface, int i) {
+              
+            }
+      }
+      )
+   
+      .setPositiveButton(R.string.str_exit_ok,
+          new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialoginterface, int i) {
+            
+            finish();
+          }
+          
+      }
+      )
+      
+      .show();
+  }  
+  
+  //show message
+  public void openDialog(String info)
+  {
+    new AlertDialog.Builder(this)
+    .setTitle("message")
+    .setMessage(info)
+    .setPositiveButton("OK",
+        new DialogInterface.OnClickListener()
+        {
+         public void onClick(DialogInterface dialoginterface, int i)
+         {
          }
          }
         )
