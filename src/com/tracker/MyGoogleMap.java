@@ -162,7 +162,7 @@ public class MyGoogleMap extends MapActivity
     label = (TextView)findViewById(R.id.label);
 
     IPAddress = getLocalIpAddress();
-    label.setText("Location IP: " + IPAddress);
+    label.setText("Location IP: " + IPAddress + ", not connection");
     
    /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
     Drawable dr = getResources().getDrawable
