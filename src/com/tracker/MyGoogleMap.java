@@ -107,6 +107,7 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
     
+    /*
     //Checking Status
     if (CheckInternet(3))
     {
@@ -120,7 +121,7 @@ public class MyGoogleMap extends MapActivity
     {
       openOptionsDialog("NO Internet");
     } 
-    
+    */
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
@@ -223,6 +224,12 @@ public class MyGoogleMap extends MapActivity
     }
     return mapLocations;
   }
+  
+  public void setP(GeoPoint nw)
+  {
+    refreshMapViewByGeoPoint(nw, 
+        mMapView, intZoomLevel);
+  }
 
  
   public final LocationListener mLocationListener01 =  
@@ -242,6 +249,11 @@ public class MyGoogleMap extends MapActivity
         //sendCurrentGPSData
         double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
         double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
+        
+        if (Setting_Ready == true)
+        {
+          label.setText("Location IP: " + IPAddress + ", connection");
+        }
         
         if (CheckProximityAlert(Latitude, Longitude) == 0)
         {
@@ -473,6 +485,7 @@ public class MyGoogleMap extends MapActivity
     double GPSData[] = new double[8];
     int i=0;
     int r=0;
+    Log.v("TAG", str);
     while (Tok.hasMoreElements())
     {
       if (i==0)
@@ -498,7 +511,9 @@ public class MyGoogleMap extends MapActivity
     
     overlay.SetPoint(top_left, top_right, bottom_left, bottom_right);
     Setting_Ready = true;
-    label.setText("Location IP: " + IPAddress + ", Starting...");
+    
+    IPAddress = getLocalIpAddress();
+    //label.setText("Location IP: " + IPAddress + ", Starting...");
 
     return 1;
   }

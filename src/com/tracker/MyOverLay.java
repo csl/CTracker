@@ -1,5 +1,7 @@
 package com.tracker;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +14,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.RectF;
 import android.graphics.Paint.Style;
+import android.os.Environment;
 import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
@@ -87,23 +90,44 @@ public class MyOverLay  extends Overlay {
 		  showWinInfo = false;
 		}
 		*/
+	  int newPointSize = gp.size();
+
 		Log.i("TAG", "onTap");
 		
-		int newPointSize = gp.size();
+    if (newPointSize < 2)
+    {
+      //mark TAG
+      mSelectedMapLocation = getHitMapLocation(mapView, p);
+      gp.add(p);
+
+      if (gp.size() == 2)
+      {
+        //TopLeft
+        double Tlplat = gp.get(0).getLatitudeE6()/ 1E6;
+        double Tlplon = gp.get(0).getLongitudeE6()/ 1E6;
+        
+        //BottomRight
+        double Brplat = gp.get(1).getLatitudeE6()/ 1E6;
+        double Brplon = gp.get(1).getLongitudeE6()/ 1E6;
+        
+        double Trplat = Brplat;
+        double Trplon = Tlplon;
+        double Blplat = Tlplat;
+        double Blplon = Brplon;
+        gp.clear();
+        gp.add(new GeoPoint((int)(Tlplat * 1e6),
+            (int)(Tlplon * 1e6)));
+        gp.add(new GeoPoint((int)(Trplat * 1e6),
+            (int)(Trplon * 1e6)));
+        gp.add(new GeoPoint((int)(Blplat * 1e6),
+            (int)(Blplon * 1e6)));        
+        gp.add(new GeoPoint((int)(Brplat * 1e6),
+            (int)(Brplon * 1e6)));
+        
+        ReadyShowRange = true;
+      }
+    }
 		
-		if (newPointSize < 4)
-		{
-		  //mark TAG
-		  mSelectedMapLocation = getHitMapLocation(mapView, p);
-		  gp.add(p);
-
-		  if (gp.size() == 4)
-	    {
-		    //choice done. link
-		    ReadyShowRange = true;
-	    }
-		}
-
 		/**
 		 *   Return true if we handled this onTap()
 		 */
@@ -316,6 +340,7 @@ public class MyOverLay  extends Overlay {
       gp.add(G3);
       gp.add(G4);
       
+      mLocationViewers.setP(G1);
       ReadyShowRange = true;
   }	
 }

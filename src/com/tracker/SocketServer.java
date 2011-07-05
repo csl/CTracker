@@ -40,10 +40,10 @@ public class SocketServer implements Runnable
 				MonitorMap.refreshSettingGPSMap(str);
 
 				DataOutputStream out = new DataOutputStream(con.getOutputStream());
-        out.writeUTF("OK");
-        out.flush();
+       out.writeUTF("OK");
+       out.flush();
 
-        in.close();
+       in.close();
 				con.close();
 			}
 			catch(IOException e)
