@@ -96,7 +96,7 @@ public class MyGoogleMap extends MapActivity
   private GeoPoint bottom_left;
   private GeoPoint bottom_right;  
   
-  private boolean Setting_Ready;
+  public boolean Setting_Ready;
 
   private static final int MENU_EXIT = Menu.FIRST;
   
@@ -122,6 +122,7 @@ public class MyGoogleMap extends MapActivity
       openOptionsDialog("NO Internet");
     } 
     */
+    
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
@@ -130,12 +131,12 @@ public class MyGoogleMap extends MapActivity
     mMapView.setStreetView(true);
     mMapView.setEnabled(true);
     mMapView.setClickable(true);
+    mMapView.setBuiltInZoomControls(true); 
      
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
      
-    //mLocationManager01 =  
-    //(LocationManager)getSystemService(Context.LOCATION_SERVICE); 
+    mLocationManager01 = (LocationManager)getSystemService(Context.LOCATION_SERVICE); 
      
     getLocationProvider(); 
      
@@ -149,8 +150,7 @@ public class MyGoogleMap extends MapActivity
     refreshMapViewByGeoPoint(nowGeoPoint, 
                        mMapView, intZoomLevel); 
      
-    //mLocationManager01.requestLocationUpdates 
-    //(strLocationProvider, 2000, 10, mLocationListener01); 
+    mLocationManager01.requestLocationUpdates(strLocationProvider, 2000, 10, mLocationListener01); 
      
     getMapLocations(true);
 
@@ -258,11 +258,11 @@ public class MyGoogleMap extends MapActivity
         if (CheckProximityAlert(Latitude, Longitude) == 0)
         {
           //over range
-          SendGPSData(Latitude + "," + Longitude + "," + "1");
-          openDialog("over range");
+          //SendGPSData(Latitude + "," + Longitude + "," + "1");
+          openDialog("over range, " + Latitude + "," + Longitude + "," + "1");
         }
-        else
-          SendGPSData(Latitude + "," + Longitude);
+        //else
+          //SendGPSData(Latitude + "," + Longitude);
         
       }
     }

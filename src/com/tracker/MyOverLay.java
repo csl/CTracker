@@ -123,7 +123,7 @@ public class MyOverLay  extends Overlay {
             (int)(Blplon * 1e6)));        
         gp.add(new GeoPoint((int)(Brplat * 1e6),
             (int)(Brplon * 1e6)));
-        
+        mLocationViewers.Setting_Ready = true;
         ReadyShowRange = true;
       }
     }
