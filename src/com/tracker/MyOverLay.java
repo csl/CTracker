@@ -123,6 +123,12 @@ public class MyOverLay  extends Overlay {
             (int)(Blplon * 1e6)));        
         gp.add(new GeoPoint((int)(Brplat * 1e6),
             (int)(Brplon * 1e6)));
+        
+        mLocationViewers.top_left = gp.get(0);
+        mLocationViewers.top_right = gp.get(1);
+        mLocationViewers.bottom_left = gp.get(2);
+        mLocationViewers.bottom_right = gp.get(3);
+        
         mLocationViewers.Setting_Ready = true;
         ReadyShowRange = true;
       }

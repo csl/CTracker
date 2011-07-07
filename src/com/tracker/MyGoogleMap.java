@@ -91,10 +91,10 @@ public class MyGoogleMap extends MapActivity
 
   private int serve_port = 12122;
   
-  private GeoPoint top_left;        
-  private GeoPoint top_right;
-  private GeoPoint bottom_left;
-  private GeoPoint bottom_right;  
+  public GeoPoint top_left;        
+  public GeoPoint top_right;
+  public GeoPoint bottom_left;
+  public GeoPoint bottom_right;  
   
   public boolean Setting_Ready;
 
@@ -136,20 +136,16 @@ public class MyGoogleMap extends MapActivity
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
      
-    mLocationManager01 = (LocationManager)getSystemService(Context.LOCATION_SERVICE); 
+    mLocationManager01 = (LocationManager) getSystemService(Context.LOCATION_SERVICE); 
      
-    getLocationProvider(); 
-     
+    getLocationProvider();     
     nowGeoPoint = getGeoByLocation(mLocation01); 
     
-    if (nowGeoPoint == null)
+    if (nowGeoPoint != null)
     {
-      openDialog("no GPS rec");    
+      refreshMapViewByGeoPoint(nowGeoPoint, 
+          mMapView, intZoomLevel); 
     }
-    
-    refreshMapViewByGeoPoint(nowGeoPoint, 
-                       mMapView, intZoomLevel); 
-     
     mLocationManager01.requestLocationUpdates(strLocationProvider, 2000, 10, mLocationListener01); 
      
     getMapLocations(true);
@@ -207,7 +203,18 @@ public class MyGoogleMap extends MapActivity
     switch (item.getItemId())
       { 
           case MENU_EXIT:
-            openExitDialog();
+            //sendCurrentGPSData
+            double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
+            double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
+     
+            //over range
+            if (CheckProximityAlert(Latitude, Longitude) == 0)
+             {
+              //SendGPSData(Latitude + "," + Longitude + "," + "1");
+              label.setText("over range, " + Latitude + "," + Longitude + "," + "1");
+             }
+            
+            //openExitDialog();
     
              break ;
       }
@@ -232,39 +239,42 @@ public class MyGoogleMap extends MapActivity
   }
 
  
-  public final LocationListener mLocationListener01 =  
-  new LocationListener() 
+  public final LocationListener mLocationListener01 =  new LocationListener() 
   { 
     public void onLocationChanged(Location location) 
     { 
       // TODO Auto-generated method stub 
-       
       mLocation01 = location; 
       nowGeoPoint = getGeoByLocation(location); 
-      refreshMapViewByGeoPoint(nowGeoPoint, 
-            mMapView, intZoomLevel);
-      
-      if (Setting_Ready)
+
+      if (nowGeoPoint != null)
       {
-        //sendCurrentGPSData
-        double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
-        double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
-        
-        if (Setting_Ready == true)
-        {
+        refreshMapViewByGeoPoint(nowGeoPoint, 
+            mMapView, intZoomLevel); 
+        label.setText("Location: change");
+
+        if (Setting_Ready)
+         {
           label.setText("Location IP: " + IPAddress + ", connection");
-        }
-        
-        if (CheckProximityAlert(Latitude, Longitude) == 0)
-        {
+
+          //sendCurrentGPSData
+          double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
+          double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
+   
           //over range
-          //SendGPSData(Latitude + "," + Longitude + "," + "1");
-          openDialog("over range, " + Latitude + "," + Longitude + "," + "1");
-        }
+          if (CheckProximityAlert(Latitude, Longitude) == 0)
+           {
+            //SendGPSData(Latitude + "," + Longitude + "," + "1");
+            label.setText("over range, " + Latitude + "," + Longitude + "," + "1");
+           }
         //else
-          //SendGPSData(Latitude + "," + Longitude);
-        
+         //{
+            //SendGPSData(Latitude + "," + Longitude);
+         //}
+          
+        }
       }
+
     }
     
     public void onProviderDisabled(String provider) 
@@ -425,8 +435,7 @@ public class MyGoogleMap extends MapActivity
       mCriteria01.setBearingRequired(false); 
       mCriteria01.setCostAllowed(true); 
       mCriteria01.setPowerRequirement(Criteria.POWER_LOW); 
-      strLocationProvider =  
-      mLocationManager01.getBestProvider(mCriteria01, true); 
+      strLocationProvider = mLocationManager01.getBestProvider(mCriteria01, true); 
        
       mLocation01 = mLocationManager01.getLastKnownLocation (strLocationProvider); //?
     } 
@@ -521,15 +530,19 @@ public class MyGoogleMap extends MapActivity
   public int CheckProximityAlert(double nowlat, double nowlon)
   {
     double Tlplat = top_left.getLatitudeE6()/ 1E6;
-    double Tlplon = top_left.getLongitudeE6()/ 1E6;
+    //double Tlplon = top_left.getLongitudeE6()/ 1E6;
     double Trplat = top_right.getLatitudeE6()/ 1E6;
+    
     double Trplon = top_right.getLongitudeE6()/ 1E6;
-    double Blplat = bottom_left.getLatitudeE6()/ 1E6;
-    double Blplon = bottom_left.getLongitudeE6()/ 1E6;    
-    double Brplat = bottom_right.getLatitudeE6()/ 1E6;
+    //double Blplat = bottom_left.getLatitudeE6()/ 1E6;
+    //double Blplon = bottom_left.getLongitudeE6()/ 1E6;    
+    //double Brplat = bottom_right.getLatitudeE6()/ 1E6;
     double Brplon = bottom_right.getLongitudeE6()/ 1E6;
     
-    if (nowlat >= Tlplat && nowlat <= Trplat)
+    label.setText("ok, " + nowlat + "," + Tlplat + "," + Trplat + "," + nowlon + "," + Trplon + "," + Brplon);
+
+    
+    if (nowlat >= Trplat && nowlat <= Tlplat)
     {
       if (nowlon >= Trplon && nowlon <= Brplon)
       {
