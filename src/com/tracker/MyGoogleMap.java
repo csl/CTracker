@@ -107,7 +107,8 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
     
-    /*
+    //CIPAddress = "192.168.173.104";
+    
     //Checking Status
     if (CheckInternet(3))
     {
@@ -121,7 +122,7 @@ public class MyGoogleMap extends MapActivity
     {
       openOptionsDialog("NO Internet");
     } 
-    */
+   
     
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
@@ -131,8 +132,13 @@ public class MyGoogleMap extends MapActivity
     mMapView.setStreetView(true);
     mMapView.setEnabled(true);
     mMapView.setClickable(true);
-    mMapView.setBuiltInZoomControls(true); 
+    //mMapView.setBuiltInZoomControls(true); 
      
+    GeoPoint gp = new GeoPoint((int)(23.1 * 1e6),
+        (int)(123.6 * 1e6));
+    
+    nowGeoPoint = gp;
+    
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
      
@@ -185,6 +191,7 @@ public class MyGoogleMap extends MapActivity
         e.printStackTrace();
     }
   }
+
   
   public boolean onCreateOptionsMenu(Menu menu)
   {
@@ -203,17 +210,8 @@ public class MyGoogleMap extends MapActivity
     switch (item.getItemId())
       { 
           case MENU_EXIT:
-            //sendCurrentGPSData
-            double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
-            double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
-     
-            //over range
-            if (CheckProximityAlert(Latitude, Longitude) == 0)
-             {
-              //SendGPSData(Latitude + "," + Longitude + "," + "1");
-              label.setText("over range, " + Latitude + "," + Longitude + "," + "1");
-             }
-            
+            SendGPSData("23.1,123.6,1");
+
             //openExitDialog();
     
              break ;
@@ -264,13 +262,13 @@ public class MyGoogleMap extends MapActivity
           //over range
           if (CheckProximityAlert(Latitude, Longitude) == 0)
            {
-            //SendGPSData(Latitude + "," + Longitude + "," + "1");
-            label.setText("over range, " + Latitude + "," + Longitude + "," + "1");
+            SendGPSData(Latitude + "," + Longitude + "," + "1");
+            label.setText("warning: over range, please reback range!!");
            }
-        //else
-         //{
-            //SendGPSData(Latitude + "," + Longitude);
-         //}
+         else
+          {
+            SendGPSData(Latitude + "," + Longitude);
+          }
           
         }
       }
@@ -418,6 +416,7 @@ public class MyGoogleMap extends MapActivity
   {
     int port = 12121;
 
+    Log.i("TAG", CIPAddress + "," + port);
     sData = new SendDataSocket(this);
     sData.SetAddressPort(CIPAddress , port);
     sData.SetSendData(GPSData);
