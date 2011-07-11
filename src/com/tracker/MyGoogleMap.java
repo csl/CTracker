@@ -107,8 +107,6 @@ public class MyGoogleMap extends MapActivity
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
     
-    //CIPAddress = "192.168.173.104";
-    
     //Checking Status
     if (CheckInternet(3))
     {
@@ -122,7 +120,6 @@ public class MyGoogleMap extends MapActivity
     {
       openOptionsDialog("NO Internet");
     } 
-   
     
     my = this;
     mMapView = (MapView)findViewById(R.id.myMapView1); 
@@ -210,9 +207,8 @@ public class MyGoogleMap extends MapActivity
     switch (item.getItemId())
       { 
           case MENU_EXIT:
-            SendGPSData("23.1,123.6,1");
-
-            //openExitDialog();
+            //SendGPSData("23.1,123.6");
+            openExitDialog();
     
              break ;
       }
@@ -249,7 +245,6 @@ public class MyGoogleMap extends MapActivity
       {
         refreshMapViewByGeoPoint(nowGeoPoint, 
             mMapView, intZoomLevel); 
-        label.setText("Location: change");
 
         if (Setting_Ready)
          {
