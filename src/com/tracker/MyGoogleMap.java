@@ -82,7 +82,6 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
-  public String CIPAddress;
   private int showPoint;
   
   public static  MapLocation mSelectedMapLocation;  
@@ -161,10 +160,48 @@ public class MyGoogleMap extends MapActivity
 
     label = (TextView)findViewById(R.id.label);
 
-    IPAddress = getLocalIpAddress();
-    label.setText("Location IP: " + IPAddress + ", not connection");
+    IPAddress ="192.168.173.101";
+    //IPAddress = getLocalIpAddress();
+    //顯示輸入IP的windows
+    final EditText input = new EditText(mMyGoogleMap);
+    input.setText(IPAddress);
+    AlertDialog.Builder alert = new AlertDialog.Builder(mMyGoogleMap);
+
+    //openOptionsDialog(getLocalIpAddress());
     
-   /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
+    alert.setTitle("設定Child Phone IP");
+    alert.setMessage("請輸入Child Phone IP位置");
+    
+    // Set an EditText view to get user input 
+    alert.setView(input);
+    
+    alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+    public void onClick(DialogInterface dialog, int whichButton) 
+    {
+      try
+      {
+        IPAddress = input.getText().toString();        
+        label.setText("Location IP: " + IPAddress + ", not connection");
+        
+        ReqGetGPSRange();
+      }
+      catch (Exception e)
+      {
+        e.printStackTrace();
+      }
+      //mMapController01.setCenter(getMapLocations(true).get(0).getPoint());
+    }
+    });
+
+    alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+      public void onClick(DialogInterface dialog, int whichButton) {
+        // Canceled.
+      }
+    });
+
+    alert.show();      
+
+    /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
     Drawable dr = getResources().getDrawable
     (
       android.R.drawable.arrow 
@@ -174,19 +211,6 @@ public class MyGoogleMap extends MapActivity
     MyItemOverlay mOverlay01 = new MyItemOverlay(dr,gp);
     List<Overlay> overlays = mMapView.getOverlays();
     overlays.add(mOverlay01);*/
-    
-    //Open Server Socket
-    try {
-        s_socket = new SocketServer(serve_port, this);
-        Thread socket_thread = new Thread(s_socket);
-        socket_thread.start();
-    } 
-    catch (IOException e) {
-        e.printStackTrace();
-    }
-    catch (Exception e) {
-        e.printStackTrace();
-    }
   }
 
   
@@ -409,15 +433,28 @@ public class MyGoogleMap extends MapActivity
 
   public void SendGPSData(String GPSData)
   {
-    int port = 12121;
+    int port = 12341;
 
-    Log.i("TAG", CIPAddress + "," + port);
+    Log.i("TAG", IPAddress + "," + port);
     sData = new SendDataSocket(this);
-    sData.SetAddressPort(CIPAddress , port);
+    sData.SetAddressPort(IPAddress , port);
     sData.SetSendData(GPSData);
     sData.SetFunction(1); 
     sData.start();
+  }
+  
+  public void ReqGetGPSRange()
+  {
+    int port = 12341;
+
+    Log.i("TAG", IPAddress + "," + port);
+    sData = new SendDataSocket(this);
+    sData.SetAddressPort(IPAddress , port);
+    //sData.SetSendData();
+    sData.SetFunction(3); 
+    sData.start();
   }  
+  
   
   public void getLocationProvider() 
   { 
@@ -487,22 +524,12 @@ public class MyGoogleMap extends MapActivity
     StringTokenizer Tok = new StringTokenizer(str, ",");
     double GPSData[] = new double[8];
     int i=0;
-    int r=0;
     Log.v("TAG", str);
     while (Tok.hasMoreElements())
     {
-      if (i==0)
-      {
-        CIPAddress = (String) Tok.nextElement();
-      }
-      else
-      {
-        GPSData[r] = Double.valueOf((String) Tok.nextElement());
-        r++;
-      }
-      i++;
+       GPSData[i] = Double.valueOf((String) Tok.nextElement());
+       i++;
     }      
-    
     top_left = new GeoPoint((int)(GPSData[0] * 1e6),
         (int)(GPSData[1] * 1e6));
     top_right = new GeoPoint((int)(GPSData[2] * 1e6),

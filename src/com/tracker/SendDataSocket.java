@@ -3,6 +3,7 @@ package com.tracker;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.StringTokenizer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -10,6 +11,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+
+import android.util.Log;
  
 public class SendDataSocket extends Thread 
 {
@@ -75,25 +78,26 @@ public class SendDataSocket extends Thread
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
             if (function  == 1)
-            {
-            	out.writeUTF(send_Data);
-            	// As long as we receive data, server will data back to the client.
+             {
+              out.writeUTF("SetNowStatus");
+            	  out.writeUTF(send_Data);
+            	 // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
                 
               while (true)
-              {
+               {
                 line = is.readUTF();
                 if (line.equals("OK")) 
-                {
+                  {
                   IsOK = true;
                 	break;
-                }
-              }
+                  }
+               }
               	
               is.close();
             }
             else if (function == 2)
-            {
+             {
               out.writeUTF("OVERRANGE");
               // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
@@ -110,6 +114,23 @@ public class SendDataSocket extends Thread
                 
               is.close();              
             }            
+            else if (function == 3)
+            {
+              out.writeUTF("GetGPSRange");
+              // As long as we receive data, server will data back to the client.
+              DataInputStream is = new DataInputStream(client.getInputStream());
+              line = is.readUTF();
+
+              if (!line.equals("NoRangeData"))
+               {
+                IsOK = true;
+                Log.v("vDEBUG: ", "vClient " + line);
+                //call back
+                GoogleMap.refreshSettingGPSMap(line);
+               }
+              is.close();
+            }            
+              
         } catch (java.io.IOException e) {
           e.printStackTrace();
         }
