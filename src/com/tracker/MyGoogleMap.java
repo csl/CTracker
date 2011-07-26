@@ -25,6 +25,7 @@ import org.xml.sax.XMLReader;
 
 import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context; 
 import android.content.DialogInterface;
@@ -39,6 +40,8 @@ import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle; 
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 //import android.util.Log;
 import android.telephony.TelephonyManager;
@@ -63,11 +66,13 @@ import com.google.android.maps.MapView;
 
 public class MyGoogleMap extends MapActivity 
 { 
-  //private TextView mTextView01;
+  private static final int MSG_DIALOG_SAFE = 1;  
+  private static final int MSG_DIALOG_OVERRANGE = 2;  
+  private static final int MSG_CLOSE_PROGRESS = 3;
+  private static final int MSG_TIMEOUT_CLOSE_PROGRESS = 4;
   static public MyGoogleMap my;
   private MyGoogleMap mMyGoogleMap = this;
   private String strLocationProvider = ""; 
-
   private LocationManager mLocationManager01; 
   private Location mLocation01; 
   private MapController mMapController01; 
@@ -77,7 +82,7 @@ public class MyGoogleMap extends MapActivity
   private List<MapLocation> mapLocations;
 
   private TextView label;
-  
+  public ProgressDialog pd;
   private int intZoomLevel=0;//geoLatitude,geoLongitude; 
   public GeoPoint nowGeoPoint;
   
@@ -182,7 +187,7 @@ public class MyGoogleMap extends MapActivity
       {
         IPAddress = input.getText().toString();        
         label.setText("Location IP: " + IPAddress + ", not connection");
-        
+
         ReqGetGPSRange();
       }
       catch (Exception e)
@@ -441,18 +446,20 @@ public class MyGoogleMap extends MapActivity
     sData.SetSendData(GPSData);
     sData.SetFunction(1); 
     sData.start();
+    
   }
   
   public void ReqGetGPSRange()
   {
     int port = 12341;
-
+    int i=0;
     Log.i("TAG", IPAddress + "," + port);
     sData = new SendDataSocket(this);
     sData.SetAddressPort(IPAddress , port);
     //sData.SetSendData();
     sData.SetFunction(3); 
     sData.start();
+    pd = ProgressDialog.show(this, "loading..", "loading GPS range data...", true, false);
   }  
   
   
@@ -544,9 +551,20 @@ public class MyGoogleMap extends MapActivity
     
     IPAddress = getLocalIpAddress();
     //label.setText("Location IP: " + IPAddress + ", Starting...");
-
+    Message msg = new Message();
+    msg.what = MSG_CLOSE_PROGRESS;
+    myHandler.sendMessage(msg);       
     return 1;
   }
+  
+  public int timeouthandler()
+  {
+    Message msg = new Message();
+    msg.what = MSG_TIMEOUT_CLOSE_PROGRESS;
+    myHandler.sendMessage(msg);
+    return 1;
+  }
+
   
   public int CheckProximityAlert(double nowlat, double nowlon)
   {
@@ -561,8 +579,6 @@ public class MyGoogleMap extends MapActivity
     double Brplon = bottom_right.getLongitudeE6()/ 1E6;
     
     label.setText("ok, " + nowlat + "," + Tlplat + "," + Trplat + "," + nowlon + "," + Trplon + "," + Brplon);
-
-    
     if (nowlat >= Trplat && nowlat <= Tlplat)
     {
       if (nowlon >= Trplon && nowlon <= Brplon)
@@ -653,6 +669,32 @@ public class MyGoogleMap extends MapActivity
         )
     .show();
   }
+  
+  //處理HANDER: refreshDouble2Geo會傳送Message出來，決定要顯示什麼
+  public Handler myHandler = new Handler(){
+    public void handleMessage(Message msg) {
+        switch(msg.what)
+        {
+          case MSG_DIALOG_SAFE:
+                label.setText("安全");
+                break;
+          case MSG_DIALOG_OVERRANGE:
+                label.setText("超出");
+                break;
+          case MSG_CLOSE_PROGRESS:
+                pd.dismiss();
+                break;
+          case MSG_TIMEOUT_CLOSE_PROGRESS:
+              pd.dismiss();
+              openOptionsDialog("Connection Timeout");
+              break;
+          default:
+                label.setText(Integer.toString(msg.what));
+        }
+        super.handleMessage(msg);
+    }
+};  
+
   
   private void openExitDialog() {
     

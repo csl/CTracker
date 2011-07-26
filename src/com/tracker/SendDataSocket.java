@@ -22,16 +22,16 @@ public class SendDataSocket extends Thread
 	private int function;
 	private String timestamp;
 	private int PicCount;
-	private boolean IsOK;
+	private int IsOK;
 	private MyGoogleMap GoogleMap;
-	public int takePictureCode;
+	private int timeout;
 	public String error_string;
   public String send_Data;
 	String line;
 	
 	public SendDataSocket(MyGoogleMap map) 
   {
-		IsOK = false;
+		IsOK = 0;
 		GoogleMap = map;
   }
 	
@@ -41,11 +41,16 @@ public class SendDataSocket extends Thread
 		this.port = p;
 	}
 	
+	public int getTimeout()
+	{
+	  return timeout;
+	}
+	
   public void SetSendData(String sdata)
   {   
     this.send_Data = sdata;
   }	
-	
+  
 	public String getTimeStamp()
 	{
 		return timestamp;		
@@ -61,7 +66,7 @@ public class SendDataSocket extends Thread
 		PicCount = count;
 		
 	}
-	public boolean getIsOK()
+	public int getIsOK()
 	{
 		return IsOK;
 	}
@@ -69,9 +74,9 @@ public class SendDataSocket extends Thread
 	@Override
 	public void run() 
 	{
+    do{
         Socket client = new Socket();
         InetSocketAddress isa = new InetSocketAddress(address, port);
-
         try {
             client.connect(isa, 10000);
             
@@ -83,16 +88,12 @@ public class SendDataSocket extends Thread
             	  out.writeUTF(send_Data);
             	 // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
-                
-              while (true)
-               {
-                line = is.readUTF();
-                if (line.equals("OK")) 
-                  {
-                  IsOK = true;
+              line = is.readUTF();
+              while (line.equals("OK")) 
+                {
+                  IsOK = 2;
                 	break;
-                  }
-               }
+                }
               	
               is.close();
             }
@@ -107,7 +108,7 @@ public class SendDataSocket extends Thread
                 line = is.readUTF();
                 if (line.equals("OK")) 
                 {
-                  IsOK = true;
+                  IsOK = 2;
                   break;
                 }
               }
@@ -116,23 +117,35 @@ public class SendDataSocket extends Thread
             }            
             else if (function == 3)
             {
+              IsOK = 0;
               out.writeUTF("GetGPSRange");
               // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
               line = is.readUTF();
-
               if (!line.equals("NoRangeData"))
                {
-                IsOK = true;
                 Log.v("vDEBUG: ", "vClient " + line);
                 //call back
+                IsOK = 2;
                 GoogleMap.refreshSettingGPSMap(line);
+               }
+              else
+               {
+                IsOK = 1;
                }
               is.close();
             }            
-              
+          out.close();
+          client.close();
         } catch (java.io.IOException e) {
           e.printStackTrace();
         }
+        timeout++;
+        if (timeout > 10)
+        {
+          GoogleMap.timeouthandler();
+          break;
+        }
+     } while (IsOK != 2);
 	}
 }
