@@ -349,4 +349,10 @@ public class MyOverLay  extends Overlay {
       mLocationViewers.setP(G1);
       ReadyShowRange = true;
   }	
+  
+  public int getGPSRangeSize()
+  {
+     return gp.size();
+  }
+
 }

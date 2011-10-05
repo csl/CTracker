@@ -11,6 +11,8 @@ import java.util.Enumeration;
 import java.util.List; 
 import java.util.Locale; 
 import java.util.StringTokenizer;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -70,7 +72,11 @@ public class MyGoogleMap extends MapActivity
   private static final int MSG_DIALOG_OVERRANGE = 2;  
   private static final int MSG_CLOSE_PROGRESS = 3;
   private static final int MSG_TIMEOUT_CLOSE_PROGRESS = 4;
+  private static final int MSG_DIALOG_SETS = 5;
+
   static public MyGoogleMap my;
+  private Timer timer;
+
   private MyGoogleMap mMyGoogleMap = this;
   private String strLocationProvider = ""; 
   private LocationManager mLocationManager01; 
@@ -101,6 +107,8 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint bottom_right;  
   
   public boolean Setting_Ready;
+  
+  public String oldGPSRangeData;
 
   private static final int MENU_EXIT = Menu.FIRST;
   
@@ -110,6 +118,8 @@ public class MyGoogleMap extends MapActivity
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
+    
+    oldGPSRangeData = "";
     
     //Checking Status
     if (CheckInternet(3))
@@ -126,6 +136,9 @@ public class MyGoogleMap extends MapActivity
     } 
     
     my = this;
+
+    timer = new Timer();
+
     mMapView = (MapView)findViewById(R.id.myMapView1); 
     mMapController01 = mMapView.getController(); 
      
@@ -165,7 +178,7 @@ public class MyGoogleMap extends MapActivity
 
     label = (TextView)findViewById(R.id.label);
 
-    IPAddress ="192.168.173.101";
+    IPAddress ="192.168.123.101";
     //IPAddress = getLocalIpAddress();
     //顯示輸入IP的windows
     final EditText input = new EditText(mMyGoogleMap);
@@ -187,8 +200,8 @@ public class MyGoogleMap extends MapActivity
       {
         IPAddress = input.getText().toString();        
         label.setText("Location IP: " + IPAddress + ", not connection");
-
-        ReqGetGPSRange();
+        //timer.schedule(new DateTask(), 0, 3000);    
+        //ReqGetGPSRange();
       }
       catch (Exception e)
       {
@@ -206,16 +219,6 @@ public class MyGoogleMap extends MapActivity
 
     alert.show();      
 
-    /* GeoPoint gp = new GeoPoint((int)geoLatitude,(int)geoLongitude);
-    Drawable dr = getResources().getDrawable
-    (
-      android.R.drawable.arrow 
-     );
-    dr.setBounds(-15,-15,15, 15);
-    
-    MyItemOverlay mOverlay01 = new MyItemOverlay(dr,gp);
-    List<Overlay> overlays = mMapView.getOverlays();
-    overlays.add(mOverlay01);*/
   }
 
   
@@ -276,7 +279,7 @@ public class MyGoogleMap extends MapActivity
             mMapView, intZoomLevel); 
 
         if (Setting_Ready)
-         {
+        {
           label.setText("Location IP: " + IPAddress + ", connection");
 
           //sendCurrentGPSData
@@ -449,20 +452,6 @@ public class MyGoogleMap extends MapActivity
     
   }
   
-  public void ReqGetGPSRange()
-  {
-    int port = 12341;
-    int i=0;
-    Log.i("TAG", IPAddress + "," + port);
-    sData = new SendDataSocket(this);
-    sData.SetAddressPort(IPAddress , port);
-    //sData.SetSendData();
-    sData.SetFunction(3); 
-    sData.start();
-    pd = ProgressDialog.show(this, "loading..", "loading GPS range data...", true, false);
-  }  
-  
-  
   public void getLocationProvider() 
   { 
     try 
@@ -623,6 +612,31 @@ public class MyGoogleMap extends MapActivity
   return has;
   }  
   
+  void setStatus(int status)
+  {    
+    if (status == 1)
+    {
+      overlay.clearRange();      
+    }
+    
+    Message msg = new Message();
+    msg.what = MSG_DIALOG_SETS;
+    myHandler.sendMessage(msg);    
+    
+  }
+
+  public class DateTask extends TimerTask {
+    public void run() 
+    {
+      int port = 12341;
+      sData = new SendDataSocket(my);
+      sData.SetAddressPort(IPAddress , port);
+      sData.SetFunction(3); 
+      sData.start();
+    }
+  }
+
+  
   private boolean HaveInternet()
   {
      boolean result = false;
@@ -676,6 +690,11 @@ public class MyGoogleMap extends MapActivity
         switch(msg.what)
         {
           case MSG_DIALOG_SAFE:
+            if (overlay.getGPSRangeSize() != 0)
+              label.setText("安全/設置範圍");
+            else
+              label.setText("安全/未設置範圍");
+            
                 label.setText("安全");
                 break;
           case MSG_DIALOG_OVERRANGE:
@@ -688,6 +707,12 @@ public class MyGoogleMap extends MapActivity
               pd.dismiss();
               openOptionsDialog("Connection Timeout");
               break;
+          case MSG_DIALOG_SETS:
+            if (overlay.getGPSRangeSize() != 0)
+              label.setText("安全/設置範圍");
+            else
+              label.setText("安全/未設置範圍");
+            break;               
           default:
                 label.setText(Integer.toString(msg.what));
         }

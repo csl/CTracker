@@ -3,6 +3,7 @@ package com.tracker;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Calendar;
 import java.util.StringTokenizer;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -16,7 +17,7 @@ import android.util.Log;
  
 public class SendDataSocket extends Thread 
 {
-
+  private String TAG = "SendDataSocket";
 	private String address;
 	private int port;
 	private int function;
@@ -83,17 +84,62 @@ public class SendDataSocket extends Thread
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
             if (function  == 1)
-             {
+            {
               out.writeUTF("SetNowStatus");
-            	  out.writeUTF(send_Data);
+           	  out.writeUTF(send_Data);
+           	  
+           	  /*
+              final Calendar c = Calendar.getInstance();
+              int shour = c.get(Calendar.HOUR_OF_DAY);
+              int sminute = c.get(Calendar.MINUTE);
+              
+              //¶Ç°e¦r¦ê®y¼Ð
+              out.writeUTF(shour + ":" + sminute);
+           	  
             	 // As long as we receive data, server will data back to the client.
+            	  
+            	*/
               DataInputStream is = new DataInputStream(client.getInputStream());
-              line = is.readUTF();
+              line = is.readUTF();              
               while (line.equals("OK")) 
+              {
+                /*
+                if (line.equals("nowGPSRange"))
                 {
-                  IsOK = 2;
-                	break;
+                  String cname, cgps, cstime, cdtime;
+                  
+                  cname = is.readUTF();
+                  cgps = is.readUTF();
+                  cstime = is.readUTF();
+                  cdtime = is.readUTF();
+  
+                  if (GoogleMap.oldGPSRangeData.equals(""))
+                  {
+                    
+                    Log.i(TAG, "get: " +cgps);
+                    GoogleMap.oldGPSRangeData = cgps;
+                    GoogleMap.refreshSettingGPSMap(cgps);
+                    GoogleMap.setStatus(0);
+                    
+                  }
+                  else if (!GoogleMap.oldGPSRangeData.equals(cgps))
+                  {
+                    Log.i(TAG, "get: " + cgps);
+                    GoogleMap.oldGPSRangeData = "";
+                    GoogleMap.refreshSettingGPSMap(cgps);
+                    GoogleMap.setStatus(0);
+                  }
+                  else
+                    GoogleMap.setStatus(0);
                 }
+                else if (line.equals("NoGPSRange"))
+                {
+                  Log.i(TAG, "nogpsrange");
+                  GoogleMap.setStatus(1);
+                }*/            
+                IsOK = 2;
+              	break;
+              }
               	
               is.close();
             }
@@ -112,29 +158,58 @@ public class SendDataSocket extends Thread
                   break;
                 }
               }
-                
               is.close();              
-            }            
-            else if (function == 3)
+            }
+            else if (function  == 3)
             {
-              IsOK = 0;
+              final Calendar c = Calendar.getInstance();
+              int shour = c.get(Calendar.HOUR_OF_DAY);
+              int sminute = c.get(Calendar.MINUTE);
               out.writeUTF("GetGPSRange");
-              // As long as we receive data, server will data back to the client.
+              //¶Ç°e¦r¦ê®y¼Ð
+              out.writeUTF(shour + ":" + sminute);
+              
+               // As long as we receive data, server will data back to the client.
               DataInputStream is = new DataInputStream(client.getInputStream());
               line = is.readUTF();
-              if (!line.equals("NoRangeData"))
-               {
-                Log.v("vDEBUG: ", "vClient " + line);
-                //call back
-                IsOK = 2;
-                GoogleMap.refreshSettingGPSMap(line);
-               }
-              else
-               {
-                IsOK = 1;
-               }
+              if (line.equals("nowGPSRange"))
+              {
+                  String cname, cgps, cstime, cdtime;
+                  
+                  cname = is.readUTF();
+                  cgps = is.readUTF();
+                  cstime = is.readUTF();
+                  cdtime = is.readUTF();
+  
+                  if (GoogleMap.oldGPSRangeData.equals(""))
+                  {
+                    
+                    Log.i(TAG, "get: " +cgps);
+                    GoogleMap.oldGPSRangeData = cgps;
+                    GoogleMap.refreshSettingGPSMap(cgps);
+                    GoogleMap.setStatus(0);
+                    
+                  }
+                  else if (!GoogleMap.oldGPSRangeData.equals(cgps))
+                  {
+                    Log.i(TAG, "get: " + cgps);
+                    GoogleMap.oldGPSRangeData = "";
+                    GoogleMap.refreshSettingGPSMap(cgps);
+                    GoogleMap.setStatus(0);
+                  }
+                  else
+                    GoogleMap.setStatus(0);
+                }
+                else if (line.equals("NoGPSRange"))
+                {
+                  Log.i(TAG, "nogpsrange");
+                  GoogleMap.setStatus(1);
+                }            
+                
               is.close();
-            }            
+              
+            }
+            
           out.close();
           client.close();
         } catch (java.io.IOException e) {
