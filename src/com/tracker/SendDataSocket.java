@@ -25,7 +25,6 @@ public class SendDataSocket extends Thread
 	private int PicCount;
 	private int IsOK;
 	private MyGoogleMap GoogleMap;
-	private int timeout;
 	public String error_string;
   public String send_Data;
 	String line;
@@ -40,11 +39,6 @@ public class SendDataSocket extends Thread
 	{		
 		this.address = addr;
 		this.port = p;
-	}
-	
-	public int getTimeout()
-	{
-	  return timeout;
 	}
 	
   public void SetSendData(String sdata)
@@ -75,11 +69,13 @@ public class SendDataSocket extends Thread
 	@Override
 	public void run() 
 	{
+	 int timeout = 0;
+
     do{
         Socket client = new Socket();
         InetSocketAddress isa = new InetSocketAddress(address, port);
         try {
-            client.connect(isa, 10000);
+            client.connect(isa, 10006);
             
             DataOutputStream out = new DataOutputStream(client.getOutputStream());
 
@@ -204,20 +200,30 @@ public class SendDataSocket extends Thread
                 {
                   Log.i(TAG, "nogpsrange");
                   GoogleMap.setStatus(1);
-                }            
-                
-              is.close();
-              
-            }
+                }
+            IsOK = 2;
+            is.close();              
+          }
             
           out.close();
           client.close();
-        } catch (java.io.IOException e) {
+        } catch (java.io.IOException e) 
+        {
           e.printStackTrace();
         }
+        
+        try {
+          Thread.sleep(2000);
+        } 
+        catch (InterruptedException e) 
+        {
+          e.printStackTrace();
+        }
+        
         timeout++;
         if (timeout > 10)
         {
+          timeout = 0;
           GoogleMap.timeouthandler();
           break;
         }

@@ -76,6 +76,8 @@ public class MyGoogleMap extends MapActivity
 
   static public MyGoogleMap my;
   private Timer timer;
+  
+  private String TAG = "MyGoogleMap";
 
   private MyGoogleMap mMyGoogleMap = this;
   private String strLocationProvider = ""; 
@@ -200,7 +202,7 @@ public class MyGoogleMap extends MapActivity
       {
         IPAddress = input.getText().toString();        
         label.setText("Location IP: " + IPAddress + ", not connection");
-        //timer.schedule(new DateTask(), 0, 3000);    
+        timer.schedule(new DateTask(), 0, 5000);    
         //ReqGetGPSRange();
       }
       catch (Exception e)
@@ -214,6 +216,7 @@ public class MyGoogleMap extends MapActivity
     alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int whichButton) {
         // Canceled.
+        timer.schedule(new DateTask(), 0, 10000);    
       }
     });
 
@@ -221,7 +224,6 @@ public class MyGoogleMap extends MapActivity
 
   }
 
-  
   public boolean onCreateOptionsMenu(Menu menu)
   {
     super.onCreateOptionsMenu(menu);
@@ -234,12 +236,14 @@ public class MyGoogleMap extends MapActivity
   @Override
   public boolean onOptionsItemSelected(MenuItem item)
   {
-    Intent intent = new Intent() ;
-    
     switch (item.getItemId())
       { 
           case MENU_EXIT:
             //SendGPSData("23.1,123.6");
+            timer.cancel();
+            mLocationManager01.removeUpdates(mLocationListener01);            
+            android.os.Process.killProcess(android.os.Process.myPid());
+
             openExitDialog();
     
              break ;
@@ -628,6 +632,7 @@ public class MyGoogleMap extends MapActivity
   public class DateTask extends TimerTask {
     public void run() 
     {
+      Log.i(TAG, "send packet...");
       int port = 12341;
       sData = new SendDataSocket(my);
       sData.SetAddressPort(IPAddress , port);
@@ -695,17 +700,17 @@ public class MyGoogleMap extends MapActivity
             else
               label.setText("安全/未設置範圍");
             
-                label.setText("安全");
-                break;
+            label.setText("安全");
+            break;
           case MSG_DIALOG_OVERRANGE:
                 label.setText("超出");
                 break;
           case MSG_CLOSE_PROGRESS:
-                pd.dismiss();
+                //pd.dismiss();
                 break;
           case MSG_TIMEOUT_CLOSE_PROGRESS:
-              pd.dismiss();
-              openOptionsDialog("Connection Timeout");
+              //pd.dismiss();
+              label.setText("Connection Timeout");
               break;
           case MSG_DIALOG_SETS:
             if (overlay.getGPSRangeSize() != 0)
