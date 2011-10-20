@@ -177,32 +177,19 @@ public class SendDataSocket extends Thread
                   cstime = is.readUTF();
                   cdtime = is.readUTF();
   
-                  if (GoogleMap.oldGPSRangeData.equals(""))
-                  {
-                    
-                    Log.i(TAG, "get: " +cgps);
-                    GoogleMap.oldGPSRangeData = cgps;
-                    GoogleMap.refreshSettingGPSMap(cgps);
-                    GoogleMap.setStatus(0);
-                    
-                  }
-                  else if (!GoogleMap.oldGPSRangeData.equals(cgps))
-                  {
-                    Log.i(TAG, "get: " + cgps);
-                    GoogleMap.oldGPSRangeData = "";
-                    GoogleMap.refreshSettingGPSMap(cgps);
-                    GoogleMap.setStatus(0);
-                  }
-                  else
-                    GoogleMap.setStatus(0);
+                  Log.i(TAG, "get: " +cgps);
+                  GoogleMap.oldGPSRangeData = cgps;
+                  GoogleMap.refreshSettingGPSMap(cgps);
+                  GoogleMap.setStatus(0);
                 }
                 else if (line.equals("NoGPSRange"))
                 {
                   Log.i(TAG, "nogpsrange");
                   GoogleMap.setStatus(1);
                 }
-            IsOK = 2;
-            is.close();              
+              
+                IsOK = 2;
+                is.close();              
           }
             
           out.close();

@@ -48,6 +48,7 @@ import android.provider.Settings;
 //import android.util.Log;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View; 
@@ -68,12 +69,13 @@ import com.google.android.maps.MapView;
 
 public class MyGoogleMap extends MapActivity 
 { 
+   
   private static final int MSG_DIALOG_SAFE = 1;  
   private static final int MSG_DIALOG_OVERRANGE = 2;  
   private static final int MSG_CLOSE_PROGRESS = 3;
   private static final int MSG_TIMEOUT_CLOSE_PROGRESS = 4;
   private static final int MSG_DIALOG_SETS = 5;
-
+  
   static public MyGoogleMap my;
   private Timer timer;
   
@@ -95,13 +97,9 @@ public class MyGoogleMap extends MapActivity
   public GeoPoint nowGeoPoint;
   
   private String IPAddress;
-  private int showPoint;
   
   public static  MapLocation mSelectedMapLocation;  
-  private SocketServer s_socket = null;
   private SendDataSocket sData;
-
-  private int serve_port = 12122;
   
   public GeoPoint top_left;        
   public GeoPoint top_right;
@@ -112,7 +110,9 @@ public class MyGoogleMap extends MapActivity
   
   public String oldGPSRangeData;
 
-  private static final int MENU_EXIT = Menu.FIRST;
+  private static final int MENU_ZOOMIN = Menu.FIRST;
+  private static final int MENU_ZOOMOUT = Menu.FIRST +1;
+  private static final int MENU_EXIT = Menu.FIRST +2;
   
   @Override 
   protected void onCreate(Bundle icicle) 
@@ -150,10 +150,7 @@ public class MyGoogleMap extends MapActivity
     mMapView.setClickable(true);
     //mMapView.setBuiltInZoomControls(true); 
      
-    GeoPoint gp = new GeoPoint((int)(23.1 * 1e6),
-        (int)(123.6 * 1e6));
-    
-    nowGeoPoint = gp;
+    nowGeoPoint = new GeoPoint((int) (24.070801 * 1000000),(int) (120.715486 * 1000000));
     
     intZoomLevel = 15; 
     mMapController01.setZoom(intZoomLevel); 
@@ -180,7 +177,7 @@ public class MyGoogleMap extends MapActivity
 
     label = (TextView)findViewById(R.id.label);
 
-    IPAddress ="192.168.123.101";
+    IPAddress ="192.168.0.50";
     //IPAddress = getLocalIpAddress();
     //顯示輸入IP的windows
     final EditText input = new EditText(mMyGoogleMap);
@@ -202,7 +199,7 @@ public class MyGoogleMap extends MapActivity
       {
         IPAddress = input.getText().toString();        
         label.setText("Location IP: " + IPAddress + ", not connection");
-        timer.schedule(new DateTask(), 0, 5000);    
+        timer.schedule(new DateTask(), 0, 10000);    
         //ReqGetGPSRange();
       }
       catch (Exception e)
@@ -228,7 +225,11 @@ public class MyGoogleMap extends MapActivity
   {
     super.onCreateOptionsMenu(menu);
     
-    menu.add(0 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
+    menu.add(0 , MENU_ZOOMIN, 1 ,"放大")
+    .setAlphabeticShortcut('E');
+    menu.add(1 , MENU_ZOOMOUT, 1 ,"縮小")
+    .setAlphabeticShortcut('E');
+    menu.add(2 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
     .setAlphabeticShortcut('E');
   return true;  
   }
@@ -238,6 +239,23 @@ public class MyGoogleMap extends MapActivity
   {
     switch (item.getItemId())
       { 
+          case MENU_ZOOMIN:
+              intZoomLevel++; 
+              if(intZoomLevel>mMapView.getMaxZoomLevel()) 
+              { 
+                intZoomLevel = mMapView.getMaxZoomLevel(); 
+              } 
+              mMapController01.setZoom(intZoomLevel); 
+              break;
+          
+          case MENU_ZOOMOUT:
+              intZoomLevel--; 
+              if(intZoomLevel<1) 
+              { 
+                intZoomLevel = 1; 
+              } 
+              mMapController01.setZoom(intZoomLevel); 
+              break;
           case MENU_EXIT:
             //SendGPSData("23.1,123.6");
             timer.cancel();
@@ -251,6 +269,21 @@ public class MyGoogleMap extends MapActivity
     
       return true ;
   }
+  
+  public boolean onKeyDown(int keyCode, KeyEvent event) 
+  {
+      MapController mc = mMapView.getController(); 
+      switch (keyCode) 
+      {
+          case KeyEvent.KEYCODE_3:
+              mc.zoomIn();
+              break;
+          case KeyEvent.KEYCODE_1:
+              mc.zoomOut();
+              break;
+      }
+      return super.onKeyDown(keyCode, event);
+  }    
   
   
   public List<MapLocation> getMapLocations(boolean doit) 
@@ -341,42 +374,6 @@ public class MyGoogleMap extends MapActivity
     catch(Exception e) 
     { 
       e.printStackTrace(); 
-    } 
-    return gp; 
-  } 
-   
-  private GeoPoint getGeoByAddress(String strSearchAddress) 
-  { 
-    GeoPoint gp = null; 
-    try 
-    { 
-      if(strSearchAddress!="") 
-      { 
-        Geocoder mGeocoder01 = new Geocoder 
-        (MyGoogleMap.this, Locale.getDefault()); 
-         
-        List<Address> lstAddress = mGeocoder01.getFromLocationName
-                           (strSearchAddress, 10);
-        if (!lstAddress.isEmpty()) 
-        { 
-          /*for (int i = 0; i < lstAddress.size(); ++i)
-          {
-            Address adsLocation = lstAddress.get(i);
-            //Log.i(TAG, "Address found = " + adsLocation.toString()); 
-            double geoLatitude = adsLocation.getLatitude();
-            double geoLongitude = adsLocation.getLongitude();
-          } */
-          Address adsLocation = lstAddress.get(0); 
-          double geoLatitude = adsLocation.getLatitude()*1E6; 
-          double geoLongitude = adsLocation.getLongitude()*1E6; 
-          gp = new GeoPoint((int) geoLatitude, (int) geoLongitude); 
-        }
-        
-      } 
-    } 
-    catch (Exception e) 
-    {  
-      e.printStackTrace();  
     } 
     return gp; 
   } 
@@ -542,8 +539,6 @@ public class MyGoogleMap extends MapActivity
     overlay.SetPoint(top_left, top_right, bottom_left, bottom_right);
     Setting_Ready = true;
     
-    IPAddress = getLocalIpAddress();
-    //label.setText("Location IP: " + IPAddress + ", Starting...");
     Message msg = new Message();
     msg.what = MSG_CLOSE_PROGRESS;
     myHandler.sendMessage(msg);       
