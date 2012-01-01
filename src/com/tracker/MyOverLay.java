@@ -22,42 +22,26 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 
 
-public class MyOverLay  extends Overlay {
+public class MyOverLay  extends Overlay 
+{
 
-	/**
-	 * Stored as global instances as one time initialization is enough
-	 */
-    private Bitmap mBubbleIcon, mShadowIcon;
-    
     private Bitmap mNowIcon;
     
-    private MyGoogleMap mLocationViewers;
-    
-    private Paint	mInnerPaint, mBorderPaint, mTextPaint;
+    private ChildTracker mLocationViewers;
     
     private List<GeoPoint> gp;
 	
-    private int infoWindowOffsetX;
-    private int infoWindowOffsetY;
-    
-    private boolean showWinInfo;
-    
     private boolean ReadyShowRange;
     
 	/**
 	 * It is used to track the visibility of information window and clicked location is known location or not 
 	 * of the currently selected Map Location
 	 */
-    private MapLocation mSelectedMapLocation;  
     
-	public MyOverLay(MyGoogleMap mLocationViewers) {
+	public MyOverLay(ChildTracker mLocationViewers) {
 		
 		this.mLocationViewers = mLocationViewers;
-		
-		mBubbleIcon = BitmapFactory.decodeResource(mLocationViewers.getResources(),R.drawable.bubble);
-		mShadowIcon = BitmapFactory.decodeResource(mLocationViewers.getResources(),R.drawable.shadow);
 		mNowIcon = BitmapFactory.decodeResource(mLocationViewers.getResources(),R.drawable.mappin_blue);
-		showWinInfo = false;
 		
 		gp = new ArrayList<GeoPoint>();
 		ReadyShowRange = false;
@@ -71,25 +55,6 @@ public class MyOverLay  extends Overlay {
 		 */
 		//boolean isRemovePriorPopup = mSelectedMapLocation != null;  
 
-		/**
-		 * Test whether a new popup should display
-		 */
-		/*
-		mSelectedMapLocation = getHitMapLocation(mapView, p);
-		if ( isRemovePriorPopup || mSelectedMapLocation != null) 
-		{
-	    mapView.invalidate();
-	    if (showWinInfo == true && mSelectedMapLocation != null)
-	    {
-	      mSelectedMapLocation = null;
-	      showWinInfo = false;
-	    }
-		}		
-		else
-		{
-		  showWinInfo = false;
-		}
-		*/
 	  int newPointSize = gp.size();
 
 		Log.i("TAG", "onTap");
@@ -97,7 +62,6 @@ public class MyOverLay  extends Overlay {
     if (newPointSize < 2)
     {
       //mark TAG
-      mSelectedMapLocation = getHitMapLocation(mapView, p);
       gp.add(p);
 
       if (gp.size() == 2)
@@ -144,9 +108,7 @@ public class MyOverLay  extends Overlay {
 	public void draw(Canvas canvas, MapView	mapView, boolean shadow) 
   {
       drawNowGeoMap(canvas, mapView, shadow);
-   		drawMapLocations(canvas, mapView, shadow);
    		drawPointRange(canvas, mapView, shadow);
-   		//drawInfoWindow(canvas, mapView, shadow);
   }
     
   public void clearRange()
@@ -154,47 +116,6 @@ public class MyOverLay  extends Overlay {
     ReadyShowRange = false;
     gp.clear();
   }
-
-  /**
-     * Test whether an information balloon should be displayed or a prior balloon hidden.
-     */
-    private MapLocation getHitMapLocation(MapView	mapView, GeoPoint	tapPoint) {
-    	
-    	/**
-    	 *   Tracking the clicks on MapLocation
-    	 */
-    	MapLocation hitMapLocation = null;
-		
-    	RectF hitTestRecr = new RectF();
-		  Point screenCoords = new Point();
-    	Iterator<MapLocation> iterator = mLocationViewers.getMapLocations(false).iterator();
-    	while(iterator.hasNext()) {
-    		MapLocation testLocation = iterator.next();
-    		
-    		/**
-    		 * This is used to translate the map's lat/long coordinates to screen's coordinates
-    		 */
-    		mapView.getProjection().toPixels(testLocation.getPoint(), screenCoords);
-
-	    	// Create a testing Rectangle with the size and coordinates of our icon
-	    	// Set the testing Rectangle with the size and coordinates of our on screen icon
-    		hitTestRecr.set(-mBubbleIcon.getWidth()/2,-mBubbleIcon.getHeight(),mBubbleIcon.getWidth()/2,0);
-    		hitTestRecr.offset(screenCoords.x,screenCoords.y);
-
-	    	//  At last test for a match between our Rectangle and the location clicked by the user
-    		mapView.getProjection().toPixels(tapPoint, screenCoords);
-    		
-    		if (hitTestRecr.contains(screenCoords.x,screenCoords.y)) {
-    			hitMapLocation = testLocation;
-    			break;
-    		}
-    	}
-    	
-    	//  Finally clear the new MouseSelection as its process finished
-    	tapPoint = null;
-    	
-    	return hitMapLocation; 
-    }
 
     
     private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
@@ -251,91 +172,6 @@ public class MyOverLay  extends Overlay {
       }
     }
     
-    private void drawMapLocations(Canvas canvas, MapView	mapView, boolean shadow) {
-    	
-		Iterator<GeoPoint> iterator = gp.iterator();
-		Point screenCoords = new Point();
-    	while(iterator.hasNext()) {	   
-    	  GeoPoint location = iterator.next();
-    		mapView.getProjection().toPixels(location, screenCoords);
-			
-	    	if (shadow) {
-	    		// Offset the shadow in the y axis as it is angled, so the base is at x=0
-	    		canvas.drawBitmap(mShadowIcon, screenCoords.x, screenCoords.y - mShadowIcon.getHeight(),null);
-	    	} else {
-    			canvas.drawBitmap(mBubbleIcon, screenCoords.x - mBubbleIcon.getWidth()/2, screenCoords.y - mBubbleIcon.getHeight(),null);
-	    	}
-    	}
-    }
-
-    private void drawInfoWindow(Canvas canvas, MapView	mapView, boolean shadow) {
-    	
-    	if ( mSelectedMapLocation != null) {
-    		if ( shadow) {
-    			//  Skip painting a shadow
-    		} else {
-				//  First we need to determine the screen coordinates of the selected MapLocation
-				Point selDestinationOffset = new Point();
-				mapView.getProjection().toPixels(mSelectedMapLocation.getPoint(), selDestinationOffset);
-		    	
-		    	//  Setup the info window
-				int INFO_WINDOW_WIDTH = 175;
-				int INFO_WINDOW_HEIGHT = 40;
-				
-				RectF infoWindowRect = new RectF(0,0,INFO_WINDOW_WIDTH,INFO_WINDOW_HEIGHT);
-				
-				infoWindowOffsetX = selDestinationOffset.x-INFO_WINDOW_WIDTH/2;
-				infoWindowOffsetY = selDestinationOffset.y-INFO_WINDOW_HEIGHT-mBubbleIcon.getHeight();
-				infoWindowRect.offset(infoWindowOffsetX,infoWindowOffsetY);
-
-				//  Drawing the inner info window
-				canvas.drawRoundRect(infoWindowRect, 10, 10, getmInnerPaint());
-				
-				//  Drawing the border for info window
-				canvas.drawRoundRect(infoWindowRect, 10, 10, getmBorderPaint());
-					
-				//  Draw the MapLocation's name
-				int TEXT_OFFSET_X = 10;
-				int TEXT_OFFSET_Y = 15;
-
-        int TEXT1_OFFSET_X = 20;
-        int TEXT1_OFFSET_Y = 25;
-
-				//canvas.drawText(mSelectedMapLocation.getName(), infoWindowOffsetX+TEXT_OFFSET_X,infoWindowOffsetY+TEXT_OFFSET_Y, getmTextPaint());
-        canvas.drawText("請點選地標, 並選擇", infoWindowOffsetX+TEXT1_OFFSET_X,infoWindowOffsetY+TEXT1_OFFSET_Y, getmTextPaint());
-        showWinInfo = true;
-			}
-    	}
-    }
-
-	public Paint getmInnerPaint() {
-		if ( mInnerPaint == null) {
-			mInnerPaint = new Paint();
-			mInnerPaint.setARGB(225, 50, 50, 50); //inner color
-			mInnerPaint.setAntiAlias(true);
-		}
-		return mInnerPaint;
-	}
-
-	public Paint getmBorderPaint() {
-		if ( mBorderPaint == null) {
-			mBorderPaint = new Paint();
-			mBorderPaint.setARGB(255, 255, 255, 255);
-			mBorderPaint.setAntiAlias(true);
-			mBorderPaint.setStyle(Style.STROKE);
-			mBorderPaint.setStrokeWidth(2);
-		}
-		return mBorderPaint;
-	}
-
-	public Paint getmTextPaint() {
-		if ( mTextPaint == null) {
-			mTextPaint = new Paint();
-			mTextPaint.setARGB(255, 255, 255, 255);
-			mTextPaint.setAntiAlias(true);
-		}
-		return mTextPaint;
-	}
 	
   public void SetPoint(GeoPoint G1, GeoPoint G2, GeoPoint G3, GeoPoint G4)
   {
