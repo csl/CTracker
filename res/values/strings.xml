@@ -11,7 +11,7 @@
   <string name="str_exit_no">取消</string>
  <string name="str_exit_ok">確認離開</string>
  
-  <string name="url">http://140.116.39.127:44444/gps/</string>
+  <string name="url">http://192.168.173.105/monitor/</string>
  
  
  <!-- 標題 -->
