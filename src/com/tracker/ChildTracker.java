@@ -173,6 +173,7 @@ public class ChildTracker extends MapActivity
       refreshMapViewByGeoPoint(nowGeoPoint, 
           mMapView, intZoomLevel); 
     }
+   
     mLocationManager01.requestLocationUpdates(strLocationProvider, 2000, 10, mLocationListener01); 
      
     Setting_Ready = false;
@@ -200,18 +201,18 @@ public class ChildTracker extends MapActivity
          for(int i = 0 ;i<childlist.size(); i++)
          {
            child_id[i] = childlist.get(i).name; 
+           Log.i(TAG, childlist.get(i).name);
          }
-      
-    
+         
         AlertDialog.Builder builder = new AlertDialog.Builder(mMyGoogleMap);
-        //openOptionsDialog(getLocalIpAddress());
         builder.setTitle("選擇您是那一個child");
-        builder.setMessage("選出您的child");
-        
+
+        mchildid = Integer.valueOf(childlist.get(0).childid);
+
         builder.setSingleChoiceItems(child_id, checked, new DialogInterface.OnClickListener() { 
           public void onClick(DialogInterface dialog, int which) 
           {
-            mchildid = which;
+            mchildid = Integer.valueOf(childlist.get(which).childid);
           } 
        }); 
         
@@ -237,10 +238,10 @@ public class ChildTracker extends MapActivity
     .setAlphabeticShortcut('E');
     menu.add(1 , MENU_ZOOMOUT, 1 ,"縮小")
     .setAlphabeticShortcut('E');
-    menu.add(2 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
-    .setAlphabeticShortcut('E');
     menu.add(2 , MENU_AT, 1 ,"自動測試程式").setIcon(R.drawable.exit)
-    .setAlphabeticShortcut('E');   
+    .setAlphabeticShortcut('E');
+    menu.add(3 , MENU_EXIT, 1 ,R.string.menu_exit).setIcon(R.drawable.exit)
+    .setAlphabeticShortcut('E');    
   return true;  
   }
   
@@ -266,20 +267,12 @@ public class ChildTracker extends MapActivity
               } 
               mMapController01.setZoom(intZoomLevel); 
               break;
-          case MENU_EXIT:
-           
-            timer.cancel();
-            mLocationManager01.removeUpdates(mLocationListener01);            
-            android.os.Process.killProcess(android.os.Process.myPid());
-
-            openExitDialog();
-    
-             break ;
           case MENU_AT:
             
             if (auto_timer == null)
             {
               auto_timer = new Timer();
+              nowGeoPoint = new GeoPoint((int) (24.070801 * 1000000),(int) (120.715486 * 1000000));
               auto_timer.schedule(new Auto_DateTask(), 2000, 2000);
             }
             else
@@ -288,6 +281,15 @@ public class ChildTracker extends MapActivity
               auto_timer = null;
             }
             break;
+          case MENU_EXIT:
+            
+            timer.cancel();
+            mLocationManager01.removeUpdates(mLocationListener01);            
+            android.os.Process.killProcess(android.os.Process.myPid());
+
+            openExitDialog();
+    
+             break ;
       }
     
       return true ;
@@ -433,7 +435,7 @@ public class ChildTracker extends MapActivity
 
   public void SendGPSData(String GPSData)
   {
-    String url_list = IPAddress + "updategps.php?gps=" + GPSData + "&ChildID=" + mchildid;
+    String url_list = IPAddress + "updategps.php?gps=" + GPSData + "&childid=" + mchildid;
     toweb(url_list);
   }
   
@@ -507,13 +509,14 @@ public class ChildTracker extends MapActivity
   
   public int CheckProximityAlert(double nowlat, double nowlon)
   {
+    if (top_left == null || top_right == null || top_right == null || bottom_right == null) return 1;
+    
     double Tlplat = top_left.getLatitudeE6()/ 1E6;
     double Trplat = top_right.getLatitudeE6()/ 1E6;
     
     double Trplon = top_right.getLongitudeE6()/ 1E6;
     double Brplon = bottom_right.getLongitudeE6()/ 1E6;
     
-    label.setText("ok, " + nowlat + "," + Tlplat + "," + Trplat + "," + nowlon + "," + Trplon + "," + Brplon);
     if (nowlat >= Trplat && nowlat <= Tlplat)
     {
       if (nowlon >= Trplon && nowlon <= Brplon)
@@ -581,7 +584,7 @@ public class ChildTracker extends MapActivity
       shour = c.get(Calendar.HOUR_OF_DAY);
       sminute = c.get(Calendar.MINUTE);      
       
-      String uriAPI = IPAddress + "getchildstatus.php?nowtime=" + shour + ":" + sminute + "&childid=" + mchildid;
+      String uriAPI = IPAddress + "getchildstatusgps.php?nowtime=" + shour + ":" + sminute + "&childid=" + mchildid;
       
       URL url = null;
       try{
@@ -602,9 +605,10 @@ public class ChildTracker extends MapActivity
         e.printStackTrace();
         return;
       }
-      
-      //handle gps message
 
+      Log.i(TAG, "loading info... ");
+
+      //handle gps message
       if (!csdata.h_name.equals("nodata"))
       {
         String cname, cgps, cstime, cdtime;
@@ -613,17 +617,15 @@ public class ChildTracker extends MapActivity
         cgps = csdata.h_rangegps;
         cstime = csdata.h_stime;
         cdtime = csdata.h_dtime;
+        Log.i(TAG, "gps: " + cgps);
 
         if (oldGPSRangeData.equals(""))
         {
-          Log.i(TAG, "get: " +cgps);
           oldGPSRangeData = cgps;
           GPSRhander(cgps);
-
         }
         else if (!oldGPSRangeData.equals(cgps))
         {
-          Log.i(TAG, "get: " + cgps);
           oldGPSRangeData = "";
           GPSRhander(cgps);
           //setStatus();
@@ -646,15 +648,32 @@ public class ChildTracker extends MapActivity
       double nowlon = nowGeoPoint.getLongitudeE6()/ 1E6 + 0.1;
       
       nowGeoPoint = new GeoPoint((int)(nowlat * 1e6), (int)(nowlon * 1e6));
-      refreshMapViewByGeoPoint(nowGeoPoint, mMapView, intZoomLevel); 
+      refreshMapViewByGeoPoint(nowGeoPoint, mMapView, intZoomLevel);
+      
+      //sendCurrentGPSData
+      double Latitude = nowGeoPoint.getLatitudeE6()/ 1E6;
+      double Longitude = nowGeoPoint.getLongitudeE6()/ 1E6;
+
+      //over range
+      if (CheckProximityAlert(Latitude, Longitude) == 0)
+       {
+        SendGPSData(Latitude + "," + Longitude + "," + "1");
+       }
+     else
+      {
+        SendGPSData(Latitude + "," + Longitude);
+      }
+      
       auto_processing.set(false);           
     }
   }
   
   void GPSRhander(String gpsdata)
   {
-    if ( gpsdata != null )
+    Log.i(TAG, "GPSData in GPSRhander");
+    if ( !gpsdata.equals("") )
     {
+      Log.i(TAG, "hadling GPSData in GPSRhander");
       StringTokenizer Tok = new StringTokenizer(gpsdata, ",");
       double GPSData[] = new double[8];
       int i=0;

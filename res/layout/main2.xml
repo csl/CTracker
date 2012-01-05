@@ -10,7 +10,7 @@
         android:id="@+id/label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Location IP: "
+        android:text="status: not connection"
   />
 
   <LinearLayout 
@@ -24,7 +24,7 @@
     android:layout_height="fill_parent" 
     android:enabled="true" 
     android:clickable="true" 
-    android:apiKey="0hEJiTWDXrSLK_a33Jn-kkUPB6NnM4skJEcVt-Q"
+    android:apiKey="0hEJiTWDXrSIVljUgRyYXV63DpXq-v_tEfYquFQ"
   /> 
 </LinearLayout>  
 </LinearLayout>

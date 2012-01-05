@@ -36,7 +36,7 @@ public class CSXMLHandler extends DefaultHandler
 	       if (localName.toLowerCase().equals("name")) {
            this.h_name = true;
          }
-	       else if (localName.toLowerCase().equals("rangegps")) {
+	       else if (localName.toLowerCase().equals("gpsrange")) {
            this.h_rangegps = true;
          }
 	       else if (localName.toLowerCase().equals("stime")) {
@@ -52,7 +52,7 @@ public class CSXMLHandler extends DefaultHandler
      if (localName.toLowerCase().equals("name")) {
       this.h_name = false;
     }
-    else if (localName.toLowerCase().equals("rangegps")) {
+    else if (localName.toLowerCase().equals("gpsrange")) {
       this.h_rangegps = false;
     }
     else if (localName.toLowerCase().equals("stime")) {

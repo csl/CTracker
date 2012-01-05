@@ -38,7 +38,7 @@ public class ChildListHandler extends DefaultHandler
 			type = 0;
 			break;
 		case CHILDID:
-			jls.name = s;
+			jls.childid = s;
 			type = 0;
 			break;
 		case NAME:

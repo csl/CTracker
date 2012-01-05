@@ -33,6 +33,8 @@ public class MyOverLay  extends Overlay
 	
     private boolean ReadyShowRange;
     
+    private String TAG = "MyOverLay";
+    
 	/**
 	 * It is used to track the visibility of information window and clicked location is known location or not 
 	 * of the currently selected Map Location
@@ -53,51 +55,6 @@ public class MyOverLay  extends Overlay
 		/**
 		 * Track the popup display
 		 */
-		//boolean isRemovePriorPopup = mSelectedMapLocation != null;  
-
-	  int newPointSize = gp.size();
-
-		Log.i("TAG", "onTap");
-		
-    if (newPointSize < 2)
-    {
-      //mark TAG
-      gp.add(p);
-
-      if (gp.size() == 2)
-      {
-        //TopLeft
-        double Tlplat = gp.get(0).getLatitudeE6()/ 1E6;
-        double Tlplon = gp.get(0).getLongitudeE6()/ 1E6;
-        
-        //BottomRight
-        double Brplat = gp.get(1).getLatitudeE6()/ 1E6;
-        double Brplon = gp.get(1).getLongitudeE6()/ 1E6;
-        
-        double Trplat = Brplat;
-        double Trplon = Tlplon;
-        double Blplat = Tlplat;
-        double Blplon = Brplon;
-        gp.clear();
-        gp.add(new GeoPoint((int)(Tlplat * 1e6),
-            (int)(Tlplon * 1e6)));
-        gp.add(new GeoPoint((int)(Trplat * 1e6),
-            (int)(Trplon * 1e6)));
-        gp.add(new GeoPoint((int)(Blplat * 1e6),
-            (int)(Blplon * 1e6)));        
-        gp.add(new GeoPoint((int)(Brplat * 1e6),
-            (int)(Brplon * 1e6)));
-        
-        mLocationViewers.top_left = gp.get(0);
-        mLocationViewers.top_right = gp.get(1);
-        mLocationViewers.bottom_left = gp.get(2);
-        mLocationViewers.bottom_right = gp.get(3);
-        
-        mLocationViewers.Setting_Ready = true;
-        ReadyShowRange = true;
-      }
-    }
-		
 		/**
 		 *   Return true if we handled this onTap()
 		 */
@@ -120,7 +77,6 @@ public class MyOverLay  extends Overlay
     
     private void drawPointRange(Canvas canvas, MapView mapView, boolean shadow) 
     {
-      
       if (ReadyShowRange == true)
       {
         Paint paint = new Paint();
@@ -151,6 +107,8 @@ public class MyOverLay  extends Overlay
         canvas.drawLine((float) myScreenCoords3.x, (float) myScreenCoords3.y, (float) myScreenCoords4.x,
             (float) myScreenCoords4.y, paint);
   
+        Log.i(TAG, "ReadyShowRange");
+
       }
     }
     
@@ -175,14 +133,13 @@ public class MyOverLay  extends Overlay
 	
   public void SetPoint(GeoPoint G1, GeoPoint G2, GeoPoint G3, GeoPoint G4)
   {
-      clearRange();
+      gp.clear();
       
       gp.add(G1);
       gp.add(G2);
       gp.add(G3);
       gp.add(G4);
       
-      mLocationViewers.setP(G1);
       ReadyShowRange = true;
   }	
   
