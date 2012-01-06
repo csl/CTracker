@@ -34,6 +34,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context; 
 import android.content.DialogInterface;
 import android.content.Intent; 
+import android.content.pm.ActivityInfo;
 //import android.graphics.drawable.Drawable;
 import android.location.Address; 
 import android.location.Criteria; 
@@ -128,6 +129,8 @@ public class ChildTracker extends MapActivity
     // TODO Auto-generated method stub 
     super.onCreate(icicle); 
     setContentView(R.layout.main2); 
+     
+    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     
     oldGPSRangeData = "";
     childlist = null;
@@ -644,8 +647,8 @@ public class ChildTracker extends MapActivity
       if (!auto_processing.compareAndSet(false, true)) return;
       
       //get now gps data
-      double nowlat = nowGeoPoint.getLatitudeE6()/ 1E6 + 0.1;
-      double nowlon = nowGeoPoint.getLongitudeE6()/ 1E6 + 0.1;
+      double nowlat = nowGeoPoint.getLatitudeE6()/ 1E6 + 0.00001;
+      double nowlon = nowGeoPoint.getLongitudeE6()/ 1E6 + 0.00001;
       
       nowGeoPoint = new GeoPoint((int)(nowlat * 1e6), (int)(nowlon * 1e6));
       refreshMapViewByGeoPoint(nowGeoPoint, mMapView, intZoomLevel);
@@ -692,7 +695,7 @@ public class ChildTracker extends MapActivity
       bottom_right = new GeoPoint((int)(GPSData[6] * 1e6),
           (int)(GPSData[7] * 1e6));
       
-      overlay.SetPoint(top_left, bottom_right, top_right, bottom_left);
+      overlay.SetPoint(top_left, top_right, bottom_left, bottom_right);
       Log.i(TAG, "GPSData set OK");
     }
     else
